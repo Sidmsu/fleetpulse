@@ -1,12 +1,7 @@
 package main
 
-import (
-	"fleetpulse/server"
-	"fleetpulse/vehicle"
-)
+import "fleetpulse/server"
 
 func main() {
-	go vehicle.StartFleet(50)
-	go server.MonitorAlerts()
 	server.StartServer()
 }
