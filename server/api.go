@@ -2,13 +2,13 @@ package server
 
 import (
 	"encoding/json"
+	"fleetpulse/models"
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 	"sync"
 	"time"
-
-	"fleetpulse/models"
 )
 
 var (
@@ -59,10 +59,13 @@ func MonitorAlerts() {
 	}
 }
 
-func StartServer() {
-	http.HandleFunc("/telemetry", HandleTelemetry)
-	http.HandleFunc("/state", HandleState)
+// ...
 
-	log.Println("FleetPulse server running on :8080")
-	log.Fatal(http.ListenAndServe(":8080", nil))
+func StartServer() {
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080" // fallback for local dev
+	}
+	log.Println("FleetPulse server running on port", port)
+	log.Fatal(http.ListenAndServe("0.0.0.0:"+port, nil))
 }
