@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"os"
 	"sync"
+	"time"
 
 	"fleetpulse/models"
 )
@@ -39,15 +39,28 @@ func HandleState(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(VehicleState)
 }
 
-func StartServer() {
-	port := os.Getenv("PORT")
-	if port == "" {
-		port = "8080"
-	}
+func MonitorAlerts() {
+	for {
+		time.Sleep(5 * time.Second)
+		now := time.Now().Unix()
 
+		StateMutex.Lock()
+		for id, data := range VehicleState {
+			if data.Health == "CRITICAL" {
+				log.Printf("🚨 CRITICAL: %s at (%.4f, %.4f)\n", id, data.Latitude, data.Longitude)
+			}
+			if now-data.Timestamp > 15 {
+				log.Printf("⚠️ OFFLINE: %s (no data in %ds)\n", id, now-data.Timestamp)
+			}
+		}
+		StateMutex.Unlock()
+	}
+}
+
+func StartServer() {
 	http.HandleFunc("/telemetry", HandleTelemetry)
 	http.HandleFunc("/state", HandleState)
 
-	log.Println("FleetPulse server running on port", port)
-	log.Fatal(http.ListenAndServe("0.0.0.0:"+port, nil))
+	log.Println("FleetPulse server running on :8080")
+	log.Fatal(http.ListenAndServe(":8080", nil))
 }
