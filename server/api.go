@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 	"sync"
 	"time"
 
@@ -16,6 +17,7 @@ var (
 	StateMutex   = sync.Mutex{}
 )
 
+// HandleTelemetry handles incoming vehicle data
 func HandleTelemetry(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	var data models.VehicleData
@@ -32,6 +34,7 @@ func HandleTelemetry(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintln(w, "Telemetry received")
 }
 
+// HandleState returns the latest state of all vehicles
 func HandleState(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	StateMutex.Lock()
@@ -39,6 +42,7 @@ func HandleState(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(VehicleState)
 }
 
+// MonitorAlerts logs alerts based on health and inactivity
 func MonitorAlerts() {
 	for {
 		time.Sleep(5 * time.Second)
@@ -57,10 +61,17 @@ func MonitorAlerts() {
 	}
 }
 
+// StartServer initializes the HTTP server
 func StartServer() {
 	http.HandleFunc("/telemetry", HandleTelemetry)
 	http.HandleFunc("/state", HandleState)
 
-	log.Println("FleetPulse server running on :8080")
-	log.Fatal(http.ListenAndServe(":8080", nil))
+	// Get dynamic port for Render, default to 8080 for local dev
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
+	}
+
+	log.Printf("FleetPulse server running on :%s\n", port)
+	log.Fatal(http.ListenAndServe(":"+port, nil))
 }
