@@ -31,9 +31,9 @@ func SimulateVehicle(id string) {
 		}
 
 		jsonData, _ := json.Marshal(data)
-		_, err := http.Post("http://localhost:8080/telemetry", "application/json", bytes.NewBuffer(jsonData))
+		_, err := http.Post("https://fleetpulse-1.onrender.com/telemetry", "application/json", bytes.NewBuffer(jsonData))
 		if err != nil {
-			fmt.Println("❌ Error sending telemetry for", id)
+			fmt.Println("❌ Error sending telemetry for", id, ":", err)
 		}
 
 		time.Sleep(2 * time.Second)
